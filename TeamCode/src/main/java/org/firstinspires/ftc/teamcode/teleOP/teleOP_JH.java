@@ -14,6 +14,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 //git commit -am "commit name"
 //git push origin main
 //git pull origin main
+//adb connect 192.168.43.1:5555
 
 @TeleOp(name = "teleOP_JH",group = "TeleOp")
 //@Disabled

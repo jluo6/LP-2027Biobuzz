@@ -43,6 +43,8 @@ public class mDriveMotors {
 
         rightFront.setDirection(DcMotorSimple.Direction.REVERSE);
         rightBack.setDirection(DcMotorSimple.Direction.REVERSE);
+        leftBack.setDirection(DcMotorSimple.Direction.REVERSE);
+        leftFront.setDirection(DcMotorSimple.Direction.REVERSE);
     }
 
     /*
@@ -61,7 +63,7 @@ public class mDriveMotors {
 
         // Strafing compensation
         // This needs to be tuned based on how mecanum drive shifts
-        double strafe = x * 1.1;
+        double strafe = x * 1;
 
         // Calculate powers
 
