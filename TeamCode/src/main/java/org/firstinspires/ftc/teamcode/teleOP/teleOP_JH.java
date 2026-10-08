@@ -4,9 +4,11 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import org.firstinspires.ftc.teamcode.mechanisms.mDriveMotors;
 
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.Servo;
 
 
 //git commit -am "commit name"
@@ -21,6 +23,8 @@ public class teleOP_JH extends OpMode {
 
     // where your variables and objects declaration goes
     private DcMotor intake;
+    private CRServo leftintake;
+    private CRServo rightintake;
 
     private enum IntakeStatus {
         ON,
@@ -32,7 +36,12 @@ public class teleOP_JH extends OpMode {
     @Override
     public void init() {
         intake = hardwareMap.get(DcMotor.class, "intake");
+        leftintake = hardwareMap.get(CRServo.class, "left_intake");
+        rightintake = hardwareMap.get(CRServo.class, "right_intake");
+
         intake.setPower(0);
+        leftintake.setPower(0);
+        rightintake.setPower(0);
 
         drive.init(hardwareMap);
 
@@ -61,38 +70,87 @@ public class teleOP_JH extends OpMode {
      */
     @Override
     public void loop() {
+        //GAMEPAD 1 PROGRAMS
+
         // Read joysticks (Remember, Y stick value is inherently reversed in FTC)
         double y = -gamepad1.left_stick_y;
         double x = gamepad1.left_stick_x;
         double rx = gamepad1.right_stick_x;
 
-        // Feed the live joystick data to your drive class
-        drive.mecanumDrive(y, x, rx);
+        // Deadzone
 
-        // Optional: Send data back to the driver station telemetry
-        telemetry.addData("Drive Sticks", "Y: %.2f, X: %.2f, RX: %.2f", y, x, rx);
-        telemetry.update();
+        y = deadzone(y);
+        x = deadzone(x);
+        rx = deadzone(rx);
+
+        // Squared response
+        /*
+        Normally if we press a joystick it gives a linear power value such as 0.7=70% power
+        but if I change input value into a square root then 0.7=49% power which makes it precise
+        so the end don't change much but the middle become less sensitive
+         */
+
+        y = Math.copySign(Math.pow(Math.abs(y), 2), y);
+        x = Math.copySign(Math.pow(Math.abs(x), 2), x);
+        rx = Math.copySign(Math.pow(Math.abs(rx), 2), rx);
+
+        // Precision mode
+        /*
+        This is a shorter version of
+        double speed;
+
+        if (gamepad1.right_bumper) {
+            speed = 0.4;
+        } else {
+            speed = 1.0;
+        }
+
+        What it does is it tells the robot to drive normally but limit everything to a certain %
+         */
+
+        double speed = gamepad1.right_bumper ? 0.4 : 1.0;
+
+        drive.mecanumDrive(
+                y * speed,
+                x * speed,
+                rx * speed
+        );
 
 
 
-        if (gamepad1.bWasPressed()){
+        //GAMEPAD 2 PROGRAMS
+
+
+        if (gamepad2.bWasPressed()){
             switch (intakeStatus){
                 case ON:
-                    intake.setDirection(DcMotorSimple.Direction.REVERSE);
+                    intake.setDirection(DcMotorSimple.Direction.FORWARD);
                     intakeStatus = IntakeStatus.OFF;
                     intake.setPower(0);
+                    leftintake.setPower(0);
+                    rightintake.setPower(0);
                     break;
 
                 case OFF:
-                    intake.setDirection(DcMotorSimple.Direction.FORWARD);
+                    intake.setDirection(DcMotorSimple.Direction.REVERSE);
                     intakeStatus = IntakeStatus.ON;
                     intake.setPower(1);
+                    leftintake.setPower(1);
+                    rightintake.setPower(1);
                     break;
             }
         }
 
 
 
+    }
+
+    /*
+    What the "deadzone" do is basically saying that
+    If the joystick is very close to zero, pretend it's exactly zero.
+     */
+    private double deadzone(double value) {
+        return Math.abs(value) < 0.05 ? 0 : value;
     }
 
 }

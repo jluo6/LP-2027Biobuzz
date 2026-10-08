@@ -43,9 +43,6 @@ public class mDriveMotors {
 
         rightFront.setDirection(DcMotorSimple.Direction.REVERSE);
         rightBack.setDirection(DcMotorSimple.Direction.REVERSE);
-
-        leftFront.setDirection(DcMotorSimple.Direction.REVERSE);
-        leftBack.setDirection(DcMotorSimple.Direction.REVERSE);
     }
 
     /*
@@ -60,19 +57,70 @@ public class mDriveMotors {
     }
 
     // Accepts the gamepad stick coordinates as arguments from the OpMode
-    public void mecanumDrive (double y, double x, double rx){
-        double strafe = x * 1.1; // Counteract imperfect strafing
+    public void mecanumDrive(double y, double x, double rx) {
 
-        // Denominator is the largest motor power (absolute value) or 1
-        // This ensures all the powers maintain the same ratio,
-        // but only if at least one is out of the range [-1, 1]
-        double denominator = Math.max(Math.abs(y) + Math.abs(strafe) + Math.abs(rx), 1);
-        double frontLeftPower = (y + strafe + rx) / denominator;
-        double backLeftPower = (y - strafe + rx) / denominator;
-        double frontRightPower = (y - strafe - rx) / denominator;
-        double backRightPower = (y + strafe - rx) / denominator;
+        // Strafing compensation
+        // This needs to be tuned based on how mecanum drive shifts
+        double strafe = x * 1.1;
 
-        // Using the exact motor variables declared above
+        // Calculate powers
+
+        double frontLeftPower = y + strafe + rx;
+        double backLeftPower = y - strafe + rx;
+        double frontRightPower = y - strafe - rx;
+        double backRightPower = y + strafe - rx;
+
+        // Normalize
+        /*
+        If we used the original FTC mecanum code
+        double denominator =
+        Math.max(
+            Math.abs(y) + Math.abs(strafe) + Math.abs(rx),
+            1
+        );
+        This will give us values more than 1 which is something that the motor can read
+        so I changed it into calculating motor power first
+        */
+
+
+        double max = Math.max(
+                Math.abs(frontLeftPower),
+                Math.max(
+                        Math.abs(backLeftPower),
+                        Math.max(
+                                Math.abs(frontRightPower),
+                                Math.abs(backRightPower)
+                        )
+                )
+        );
+
+        /*
+        Through this equation on the bottom in example if we had values of
+        FL = 1.8
+        BL = 1.2
+        FR = 0.2
+        BR = 0.8
+        it will produce largest value of 1.8
+        and what this equation does is then divide all the value by the largest value so
+        FL = 1.8 / 1.8
+        BL = 1.2 / 1.8
+        FR = 0.2 / 1.8
+        BR = 0.8 /1.8
+        which gives us
+        FL = 1
+        BL = 0.67
+        FR = 0.11
+        BR = 0.44
+        therefore the motor could read these values and it wouldn't get over 1
+        */
+
+        if (max > 1.0) {
+            frontLeftPower /= max;
+            backLeftPower /= max;
+            frontRightPower /= max;
+            backRightPower /= max;
+        }
+
         leftFront.setPower(frontLeftPower);
         leftBack.setPower(backLeftPower);
         rightFront.setPower(frontRightPower);
