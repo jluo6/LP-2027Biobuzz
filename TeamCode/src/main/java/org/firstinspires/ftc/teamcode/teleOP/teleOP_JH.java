@@ -1,3 +1,4 @@
+
 package org.firstinspires.ftc.teamcode.teleOP;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
@@ -31,9 +32,10 @@ public class teleOP_JH extends OpMode {
     private CRServo windmillServo;
     public final int LAUNCHER_TARGET_VELOCITY = 1250;
     public final int LAUNCHER_MIN_VELOCITY = 1100;
+    private boolean windmillOn = false;
 
     void launch() {
-        if (gamepad1.right_bumper) {
+        if (gamepad2.right_bumper) {
             launcher.setVelocity(LAUNCHER_TARGET_VELOCITY);
         } else {
             launcher.setVelocity(0);
@@ -58,15 +60,18 @@ public class teleOP_JH extends OpMode {
         launcher.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         launcher.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(40, 0, 0, 12.5));
 
+        intake.setDirection(DcMotorSimple.Direction.FORWARD);
+
         intake.setPower(0);
         leftintake.setPower(0);
         rightintake.setPower(0);
+        launcher.setVelocity(0);
         windmillServo.setPower(0);
 
         drive.init(hardwareMap);
 
         telemetry.addData("Status", "Initialized");
-
+        telemetry.update();
     }
 
     /*
@@ -96,7 +101,7 @@ public class teleOP_JH extends OpMode {
         double y = -gamepad1.left_stick_y;
         double x = gamepad1.left_stick_x;
         double rx = gamepad1.right_stick_x;
-        launch();
+
         // Deadzone
 
         y = deadzone(y);
@@ -128,7 +133,7 @@ public class teleOP_JH extends OpMode {
         What it does is it tells the robot to drive normally but limit everything to a certain %
          */
 
-        double speed = gamepad1.right_bumper ? 0.4 : 1.0;
+        double speed = gamepad1.left_bumper ? 0.4 : 1.0;
 
         drive.mecanumDrive(
                 y * speed,
@@ -140,11 +145,11 @@ public class teleOP_JH extends OpMode {
 
         //GAMEPAD 2 PROGRAMS
 
+        launch();
 
-        if (gamepad1.bWasPressed()){
+        if (gamepad2.bWasPressed()){
             switch (intakeStatus){
                 case ON:
-                    intake.setDirection(DcMotorSimple.Direction.REVERSE);
                     intakeStatus = IntakeStatus.OFF;
                     intake.setPower(0);
                     leftintake.setPower(0);
@@ -161,8 +166,28 @@ public class teleOP_JH extends OpMode {
             }
         }
 
+        if (gamepad2.aWasPressed()) {
+            windmillOn = !windmillOn;
+        }
 
+        if (windmillOn) {
+            windmillServo.setPower(1.0);
+        } else {
+            windmillServo.setPower(0);
+        }
 
+        double currentVelocity = launcher.getVelocity();
+
+        boolean launcherReady =
+                gamepad2.right_bumper &&
+                        Math.abs(currentVelocity) >= LAUNCHER_MIN_VELOCITY;
+
+        telemetry.addData("Drive Speed", speed);
+        telemetry.addData("Intake Status", intakeStatus);
+        telemetry.addData("Launcher Velocity", currentVelocity);
+        telemetry.addData("Launcher Ready", launcherReady);
+        telemetry.addData("Windmill", windmillOn ? "ON" : "OFF");
+        telemetry.update();
     }
 
     /*
@@ -173,5 +198,16 @@ public class teleOP_JH extends OpMode {
         return Math.abs(value) < 0.05 ? 0 : value;
     }
 
-}
+    @Override
+    public void stop() {
+        drive.mecanumDrive(0, 0, 0);
 
+        intake.setPower(0);
+        leftintake.setPower(0);
+        rightintake.setPower(0);
+
+        launcher.setVelocity(0);
+        windmillServo.setPower(0);
+    }
+
+}
