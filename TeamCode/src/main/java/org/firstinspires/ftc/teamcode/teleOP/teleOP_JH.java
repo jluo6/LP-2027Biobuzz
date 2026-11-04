@@ -1,14 +1,14 @@
 package org.firstinspires.ftc.teamcode.teleOP;
-
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import org.firstinspires.ftc.teamcode.mechanisms.mDriveMotors;
 
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
-import com.qualcomm.robotcore.hardware.HardwareMap;
-import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 
 
 //git commit -am "commit name"
@@ -27,6 +27,19 @@ public class teleOP_JH extends OpMode {
     private CRServo leftintake;
     private CRServo rightintake;
 
+    private DcMotorEx launcher;
+    private CRServo windmillServo;
+    public final int LAUNCHER_TARGET_VELOCITY = 1250;
+    public final int LAUNCHER_MIN_VELOCITY = 1100;
+
+    void launch() {
+        if (gamepad1.right_bumper) {
+            launcher.setVelocity(LAUNCHER_TARGET_VELOCITY);
+        } else {
+            launcher.setVelocity(0);
+        }
+    }
+
     private enum IntakeStatus {
         ON,
         OFF
@@ -39,10 +52,16 @@ public class teleOP_JH extends OpMode {
         intake = hardwareMap.get(DcMotor.class, "intake");
         leftintake = hardwareMap.get(CRServo.class, "left_intake");
         rightintake = hardwareMap.get(CRServo.class, "right_intake");
+        launcher = hardwareMap.get(DcMotorEx.class, "launcher");
+        windmillServo = hardwareMap.get(CRServo.class, "windmillServo");
+
+        launcher.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        launcher.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(40, 0, 0, 12.5));
 
         intake.setPower(0);
         leftintake.setPower(0);
         rightintake.setPower(0);
+        windmillServo.setPower(0);
 
         drive.init(hardwareMap);
 
@@ -77,7 +96,7 @@ public class teleOP_JH extends OpMode {
         double y = -gamepad1.left_stick_y;
         double x = gamepad1.left_stick_x;
         double rx = gamepad1.right_stick_x;
-
+        launch();
         // Deadzone
 
         y = deadzone(y);
@@ -147,7 +166,7 @@ public class teleOP_JH extends OpMode {
     }
 
     /*
-    What the "deadzone" do is basically saying that
+    What the "deadzone" does is basically saying that
     If the joystick is very close to zero, pretend it's exactly zero.
      */
     private double deadzone(double value) {
@@ -156,4 +175,3 @@ public class teleOP_JH extends OpMode {
 
 }
 
-//test
