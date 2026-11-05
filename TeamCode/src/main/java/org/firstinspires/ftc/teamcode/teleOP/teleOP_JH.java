@@ -30,24 +30,22 @@ public class teleOP_JH extends OpMode {
 
     private DcMotorEx launcher;
     private CRServo windmillServo;
-    public final int LAUNCHER_TARGET_VELOCITY = 1250;
-    public final int LAUNCHER_MIN_VELOCITY = 1100;
     private boolean windmillOn = false;
+    private final int LAUNCHER_TARGET_VELOCITY = 1250;
+    public final int LAUNCHER_MIN_VELOCITY = 1100;
 
-    void launch() {
-        if (gamepad2.right_bumper) {
-            launcher.setVelocity(LAUNCHER_TARGET_VELOCITY);
-        } else {
-            launcher.setVelocity(0);
-        }
+
+    private enum LaunchStatus {
+        ON,
+        OFF,
     }
-
     private enum IntakeStatus {
         ON,
         OFF
     }
 
     private IntakeStatus intakeStatus = IntakeStatus.OFF;
+    private LaunchStatus launchstatus = LaunchStatus.OFF;
 
     @Override
     public void init() {
@@ -58,7 +56,7 @@ public class teleOP_JH extends OpMode {
         windmillServo = hardwareMap.get(CRServo.class, "windmillServo");
 
         launcher.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        launcher.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(40, 0, 0, 12.5));
+        launcher.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(39, 0, 0, 12.5));
 
         intake.setDirection(DcMotorSimple.Direction.FORWARD);
 
@@ -145,9 +143,29 @@ public class teleOP_JH extends OpMode {
 
         //GAMEPAD 2 PROGRAMS
 
-        launch();
+        if (gamepad2.b){
+            switch (launchstatus){
+                case ON:
+                    launchstatus = LaunchStatus.OFF;
+                    launcher.setVelocity(LAUNCHER_TARGET_VELOCITY);
+                    break;
 
-        if (gamepad2.bWasPressed()){
+                case OFF:
+                    launchstatus = LaunchStatus.ON;
+                    launcher.setVelocity(LAUNCHER_MIN_VELOCITY);
+                    break;
+
+            }
+        }
+
+        if (gamepad2.left_bumper){
+            intake.setPower(-1);
+        }
+        else {
+            intake.setPower(0);
+        }
+
+        if (gamepad2.right_bumper){
             switch (intakeStatus){
                 case ON:
                     intakeStatus = IntakeStatus.OFF;
@@ -165,8 +183,19 @@ public class teleOP_JH extends OpMode {
                     break;
             }
         }
+        if (gamepad2.x){
+            launcher.setVelocity(0);
+        }
 
-        if (gamepad2.aWasPressed()) {
+        if (gamepad2.y) {
+            windmillServo.setPower(-1);
+        }
+        else {
+            windmillServo.setPower(0);
+        }
+
+
+        if (gamepad2.a) {
             windmillOn = !windmillOn;
         }
 
@@ -177,10 +206,8 @@ public class teleOP_JH extends OpMode {
         }
 
         double currentVelocity = launcher.getVelocity();
+        boolean launcherReady = gamepad2.b &&  Math.abs(currentVelocity) >= LAUNCHER_MIN_VELOCITY;
 
-        boolean launcherReady =
-                gamepad2.right_bumper &&
-                        Math.abs(currentVelocity) >= LAUNCHER_MIN_VELOCITY;
 
         telemetry.addData("Drive Speed", speed);
         telemetry.addData("Intake Status", intakeStatus);
