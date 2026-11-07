@@ -33,7 +33,7 @@ public class teleOP_JH extends OpMode {
 
     private final int LAUNCHER_TARGET_VELOCITY = 1250;
     private final int LAUNCHER_MIN_VELOCITY = 1000;
-    private final int LAUNCHER_READY_VELOCITY = 1240;
+    private final int LAUNCHER_READY_VELOCITY = 1210;
 
     private boolean launcherOn = false;
     private boolean windmillOn = false;
@@ -77,7 +77,7 @@ public class teleOP_JH extends OpMode {
         launcher.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         launcher.setPIDFCoefficients(
                 DcMotor.RunMode.RUN_USING_ENCODER,
-                new PIDFCoefficients(39, 0, 0, 12.5)
+                new PIDFCoefficients(32.0, 0, 0, 12.32)
         );
 
         intake.setDirection(DcMotorSimple.Direction.FORWARD);

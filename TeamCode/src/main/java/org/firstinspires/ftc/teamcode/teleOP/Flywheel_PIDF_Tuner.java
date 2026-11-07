@@ -5,20 +5,24 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
+
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
+import com.qualcomm.robotcore.hardware.CRServo;
 
 @TeleOp(name = "Flywheel_PIDF_Tuner", group = "Test")
 public class Flywheel_PIDF_Tuner extends OpMode {
-
     private DcMotorEx launcher;
+    private CRServo windmillServo;
+
 
     private final double TARGET_VELOCITY = 1250;
     private final double MIN_VELOCITY = 1200;
 
-    private double p = 40;
+    private double p = 30.67;
     private double i = 0;
     private double d = 0;
-    private double f = 12.5;
+    private double f = 12.32;
 
     private final String[] coefficientNames = {"P", "I", "D", "F"};
 
@@ -32,9 +36,14 @@ public class Flywheel_PIDF_Tuner extends OpMode {
     @Override
     public void init() {
         launcher = hardwareMap.get(DcMotorEx.class, "launcher");
+        windmillServo = hardwareMap.get(CRServo.class, "windmillServo");
+
 
         launcher.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         launcher.setVelocity(0);
+        windmillServo.setPower(1);
+
+
 
         updatePIDF();
 
