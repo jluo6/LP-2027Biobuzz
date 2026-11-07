@@ -30,48 +30,41 @@ public class teleOP_JH extends OpMode {
 
     private DcMotorEx launcher;
     private CRServo windmillServo;
-<<<<<<< HEAD
-=======
-    public final int LAUNCHER_TARGET_VELOCITY = 1250;
-    public final int LAUNCHER_MIN_VELOCITY = 1200;
-    private boolean launcherOn = false;
->>>>>>> 51d1417 (Launcher autonomous and FlyWheel Tuning)
-    private boolean windmillOn = false;
+
     private final int LAUNCHER_TARGET_VELOCITY = 1250;
-    public final int LAUNCHER_MIN_VELOCITY = 1100;
+    private final int LAUNCHER_MIN_VELOCITY = 1000;
+    private final int LAUNCHER_READY_VELOCITY = 1240;
 
-<<<<<<< HEAD
+    private boolean launcherOn = false;
+    private boolean windmillOn = false;
 
-    private enum LaunchStatus {
+    private enum IntakeStatus {
         ON,
         OFF,
-=======
-    void launch() {
-        if (gamepad2.aWasPressed()) {
-            launcherOn = !launcherOn;
-        }
+        REVERSE
+    }
 
+    private IntakeStatus intakeStatus = IntakeStatus.OFF;
+
+    void launch() {
         if (launcherOn) {
             launcher.setVelocity(LAUNCHER_TARGET_VELOCITY);
         } else {
-            launcher.setVelocity(0);
+            launcher.setVelocity(LAUNCHER_MIN_VELOCITY);
         }
 
         double currentVelocity = Math.abs(launcher.getVelocity());
 
-        windmillOn = launcherOn &&
-                currentVelocity >= LAUNCHER_MIN_VELOCITY;
+        if (intakeStatus == IntakeStatus.REVERSE) {
+            windmillOn = true;
+            windmillServo.setPower(-1.0);
+        } else {
+            windmillOn = launcherOn &&
+                    currentVelocity >= LAUNCHER_READY_VELOCITY;
 
-        windmillServo.setPower(windmillOn ? 1.0 : 0.0);
->>>>>>> 51d1417 (Launcher autonomous and FlyWheel Tuning)
+            windmillServo.setPower(windmillOn ? 1.0 : 0.0);
+        }
     }
-    private enum IntakeStatus {
-        ON,
-        OFF
-    }
-
-    private IntakeStatus intakeStatus = IntakeStatus.OFF;
-    private LaunchStatus launchstatus = LaunchStatus.OFF;
 
     @Override
     public void init() {
@@ -82,7 +75,10 @@ public class teleOP_JH extends OpMode {
         windmillServo = hardwareMap.get(CRServo.class, "windmillServo");
 
         launcher.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        launcher.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(39, 0, 0, 12.5));
+        launcher.setPIDFCoefficients(
+                DcMotor.RunMode.RUN_USING_ENCODER,
+                new PIDFCoefficients(39, 0, 0, 12.5)
+        );
 
         intake.setDirection(DcMotorSimple.Direction.FORWARD);
 
@@ -169,86 +165,70 @@ public class teleOP_JH extends OpMode {
 
         //GAMEPAD 2 PROGRAMS
 
-        if (gamepad2.b){
-            switch (launchstatus){
-                case ON:
-                    launchstatus = LaunchStatus.OFF;
-                    launcher.setVelocity(LAUNCHER_TARGET_VELOCITY);
-                    break;
+        if (gamepad2.aWasPressed()) {
+            launcherOn = !launcherOn;
 
-                case OFF:
-                    launchstatus = LaunchStatus.ON;
-                    launcher.setVelocity(LAUNCHER_MIN_VELOCITY);
-                    break;
-
+            if (launcherOn && intakeStatus == IntakeStatus.REVERSE) {
+                intakeStatus = IntakeStatus.OFF;
             }
         }
 
-        if (gamepad2.left_bumper){
-            intake.setPower(-1);
-        }
-        else {
-            intake.setPower(0);
-        }
-
-        if (gamepad2.right_bumper){
-            switch (intakeStatus){
-                case ON:
-                    intakeStatus = IntakeStatus.OFF;
-                    intake.setPower(0);
-                    leftintake.setPower(0);
-                    rightintake.setPower(0);
-                    break;
-
-                case OFF:
-                    intake.setDirection(DcMotorSimple.Direction.FORWARD);
-                    intakeStatus = IntakeStatus.ON;
-                    intake.setPower(1);
-                    leftintake.setPower(1);
-                    rightintake.setPower(1);
-                    break;
+        if (gamepad2.rightBumperWasPressed()) {
+            if (intakeStatus == IntakeStatus.ON) {
+                intakeStatus = IntakeStatus.OFF;
+            } else {
+                intakeStatus = IntakeStatus.ON;
             }
         }
-        if (gamepad2.x){
-            launcher.setVelocity(0);
-        }
 
-<<<<<<< HEAD
-        if (gamepad2.y) {
-            windmillServo.setPower(-1);
-        }
-        else {
-            windmillServo.setPower(0);
+        if (gamepad2.leftBumperWasPressed()) {
+            if (intakeStatus == IntakeStatus.REVERSE) {
+                intakeStatus = IntakeStatus.OFF;
+            } else {
+                intakeStatus = IntakeStatus.REVERSE;
+                launcherOn = false;
+            }
         }
 
 
-        if (gamepad2.a) {
-            windmillOn = !windmillOn;
+        switch (intakeStatus) {
+            case ON:
+                intake.setPower(1.0);
+                leftintake.setPower(1.0);
+                rightintake.setPower(1.0);
+                break;
+
+            case REVERSE:
+                intake.setPower(-1.0);
+                leftintake.setPower(-1.0);
+                rightintake.setPower(-1.0);
+                break;
+
+            case OFF:
+                intake.setPower(0);
+                leftintake.setPower(0);
+                rightintake.setPower(0);
+                break;
         }
 
-        if (windmillOn) {
-            windmillServo.setPower(1.0);
-        } else {
-            windmillServo.setPower(0);
-        }
+        launch();
 
-=======
->>>>>>> 51d1417 (Launcher autonomous and FlyWheel Tuning)
         double currentVelocity = launcher.getVelocity();
-        boolean launcherReady = gamepad2.b &&  Math.abs(currentVelocity) >= LAUNCHER_MIN_VELOCITY;
 
-<<<<<<< HEAD
-=======
         boolean launcherReady =
                 launcherOn &&
-                        Math.abs(currentVelocity) >= LAUNCHER_MIN_VELOCITY;
->>>>>>> 51d1417 (Launcher autonomous and FlyWheel Tuning)
+                        Math.abs(currentVelocity) >= LAUNCHER_READY_VELOCITY;
 
         telemetry.addData("Drive Speed", speed);
         telemetry.addData("Intake Status", intakeStatus);
         telemetry.addData("Launcher Velocity", currentVelocity);
+        telemetry.addData("Launcher Target",
+                launcherOn ? LAUNCHER_TARGET_VELOCITY : LAUNCHER_MIN_VELOCITY);
         telemetry.addData("Launcher Ready", launcherReady);
-        telemetry.addData("Windmill", windmillOn ? "ON" : "OFF");
+        telemetry.addData("Windmill",
+                intakeStatus == IntakeStatus.REVERSE
+                        ? "REVERSE"
+                        : (windmillOn ? "ON" : "OFF"));
         telemetry.update();
     }
 
@@ -273,6 +253,7 @@ public class teleOP_JH extends OpMode {
 
         launcherOn = false;
         windmillOn = false;
+        intakeStatus = IntakeStatus.OFF;
     }
 
 }
