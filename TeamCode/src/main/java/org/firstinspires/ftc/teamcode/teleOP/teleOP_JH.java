@@ -30,14 +30,40 @@ public class teleOP_JH extends OpMode {
 
     private DcMotorEx launcher;
     private CRServo windmillServo;
+<<<<<<< HEAD
+=======
+    public final int LAUNCHER_TARGET_VELOCITY = 1250;
+    public final int LAUNCHER_MIN_VELOCITY = 1200;
+    private boolean launcherOn = false;
+>>>>>>> 51d1417 (Launcher autonomous and FlyWheel Tuning)
     private boolean windmillOn = false;
     private final int LAUNCHER_TARGET_VELOCITY = 1250;
     public final int LAUNCHER_MIN_VELOCITY = 1100;
 
+<<<<<<< HEAD
 
     private enum LaunchStatus {
         ON,
         OFF,
+=======
+    void launch() {
+        if (gamepad2.aWasPressed()) {
+            launcherOn = !launcherOn;
+        }
+
+        if (launcherOn) {
+            launcher.setVelocity(LAUNCHER_TARGET_VELOCITY);
+        } else {
+            launcher.setVelocity(0);
+        }
+
+        double currentVelocity = Math.abs(launcher.getVelocity());
+
+        windmillOn = launcherOn &&
+                currentVelocity >= LAUNCHER_MIN_VELOCITY;
+
+        windmillServo.setPower(windmillOn ? 1.0 : 0.0);
+>>>>>>> 51d1417 (Launcher autonomous and FlyWheel Tuning)
     }
     private enum IntakeStatus {
         ON,
@@ -187,6 +213,7 @@ public class teleOP_JH extends OpMode {
             launcher.setVelocity(0);
         }
 
+<<<<<<< HEAD
         if (gamepad2.y) {
             windmillServo.setPower(-1);
         }
@@ -205,9 +232,17 @@ public class teleOP_JH extends OpMode {
             windmillServo.setPower(0);
         }
 
+=======
+>>>>>>> 51d1417 (Launcher autonomous and FlyWheel Tuning)
         double currentVelocity = launcher.getVelocity();
         boolean launcherReady = gamepad2.b &&  Math.abs(currentVelocity) >= LAUNCHER_MIN_VELOCITY;
 
+<<<<<<< HEAD
+=======
+        boolean launcherReady =
+                launcherOn &&
+                        Math.abs(currentVelocity) >= LAUNCHER_MIN_VELOCITY;
+>>>>>>> 51d1417 (Launcher autonomous and FlyWheel Tuning)
 
         telemetry.addData("Drive Speed", speed);
         telemetry.addData("Intake Status", intakeStatus);
@@ -235,6 +270,8 @@ public class teleOP_JH extends OpMode {
 
         launcher.setVelocity(0);
         windmillServo.setPower(0);
+        launcherOn = false;
+        windmillOn = false;
     }
 
 }
