@@ -270,6 +270,7 @@ public class teleOP_JH extends OpMode {
 
         launcher.setVelocity(0);
         windmillServo.setPower(0);
+
         launcherOn = false;
         windmillOn = false;
     }
